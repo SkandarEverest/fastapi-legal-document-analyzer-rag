@@ -1,0 +1,23 @@
+[project]
+name = "basic-rag-engine"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "alembic>=1.18.4",
+    "chonkie>=1.6.6",
+    "chromadb>=1.5.9",
+    "dateparser>=1.4.0",
+    "fastapi>=0.136.1",
+    "mcp[cli]>=1.27.1",
+    "openai>=2.37.0",
+    "pydantic-settings>=2.14.1",
+    "pypdf>=6.11.0",
+    "python-multipart>=0.0.28",
+    "python-ulid>=3.1.0",
+    "scalar-fastapi>=1.8.2",
+    "sentence-transformers>=5.5.0",
+    "sqlmodel>=0.0.38",
+    "uvicorn[standard]>=0.47.0",
+]

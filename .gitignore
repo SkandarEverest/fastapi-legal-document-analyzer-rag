@@ -1,0 +1,27 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Environment
+.env
+
+# App data
+uploads/
+chroma/
+*.db
+*.db-journal
+
+# HF cache (when local)
+models/
+
+# IDE
+.vscode/
+.idea/
+.DS_Store
