@@ -45,16 +45,18 @@ API docs: <http://localhost:8000/scalar> or <http://localhost:8000/docs>
 | `GET` | `/documents/` | List documents. Filter via `?jenis=perjanjian_kerja&pihak=PT+ABC`. |
 | `GET` | `/documents/{id}` | One document with metadata + chunks (text + per-chunk citations). |
 | `POST` | `/upload/` | Multipart PDF upload. Returns the created Document with extracted legal metadata. |
-| `GET` | `/search?q=...&k=5` | Semantic search → top-k chunks → LLM-generated answer in Bahasa with citations. |
+| `GET` | `/search?q=...&k=30&doc_ids=...` | Semantic search → top-k chunks → LLM-generated answer in Bahasa with citations. `doc_ids` (repeatable) pins retrieval to specific documents and splits k evenly across them — use for cross-document comparison. |
 | `GET` | `/scalar` | API docs (Scalar). |
 
-### Example
+### Example — single document Q&A
 
-A sample PDF (`Contoh-Surat-PKWTT.pdf` — an Indonesian unlimited-term employment agreement) lives in [samples/](samples/).
+Two sample PDFs live in [samples/](samples/):
+- `Surat-PKWTT.pdf` — Indonesian unlimited-term employment agreement (PKWTT)
+- `uu_no_13.pdf` — UU No. 13 Tahun 2003 tentang Ketenagakerjaan (full statute)
 
 ```bash
 # Upload the sample contract
-curl -F "file=@samples/Contoh-Surat-PKWTT.pdf" http://localhost:8000/upload/
+curl -F "file=@samples/Surat-PKWTT.pdf" http://localhost:8000/upload/
 
 # List documents (should show jenis=perjanjian_kerja, para_pihak, tanggal_efektif=2026-06-01)
 curl http://localhost:8000/documents/
@@ -64,6 +66,26 @@ curl "http://localhost:8000/search?q=Berapa%20gaji%20bulanan%20setelah%20lulus%2
 curl "http://localhost:8000/search?q=Bagaimana%20cara%20saya%20resign"
 curl "http://localhost:8000/search?q=Apa%20yang%20terjadi%20kalau%20ada%20bencana%20alam"
 ```
+
+### Example — cross-document compliance check
+
+Upload both a contract and the statute it should comply with, then pin retrieval to **both** documents so chunks from each are guaranteed in context.
+
+```bash
+# 1. Upload the contract and the statute
+curl -F "file=@samples/Surat-PKWTT.pdf" http://localhost:8000/upload/
+curl -F "file=@samples/uu_no_13.pdf" http://localhost:8000/upload/
+
+# 2. Grab the two document IDs
+curl -s http://localhost:8000/documents/ | jq -r '.[].id'
+# → 01HXYZ...PKWTT
+# → 01HXYZ...UU13
+
+# 3. Cross-document query. Use doc_ids to pin both docs; bump k for the big statute.
+curl "http://localhost:8000/search/?q=Apakah%20waktu%20kerja%20dalam%20perjanjian%20sudah%20sesuai%20UU&doc_ids=01HXYZ...PKWTT&doc_ids=01HXYZ...UU13&k=30"
+```
+
+For a long statute like UU 13/2003 (~150 chunks), k=30 split across 2 docs gives ~15 chunks per side — enough for the engine to pull both PKWTT Pasal 6 (42 jam/minggu) and UU Pasal 77 (max 40 jam/minggu) and flag the discrepancy. With the default `TOP_K=30` in `.env`, the `&k=` param can be omitted.
 
 ## Run the MCP server
 

@@ -22,10 +22,10 @@ def _client() -> OpenAI:
     )
 
 
-def search(query: str, k: int | None = None) -> dict:
+def search(query: str, k: int | None = None, doc_ids: list[str] | None = None) -> dict:
     top_k = k or settings.TOP_K
     q_vec = embeddings.encode_one(query)
-    hits = vectorstore.query(q_vec, k=top_k)
+    hits = vectorstore.query(q_vec, k=top_k, doc_ids=doc_ids or [])
 
     citations = []
     context_blocks = []

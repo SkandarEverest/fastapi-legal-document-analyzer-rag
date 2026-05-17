@@ -52,11 +52,13 @@ def upload_document(file_path: str) -> dict:
 
 
 @mcp.tool()
-def search_legal_docs(query: str, k: int = 5) -> dict:
+def search_legal_docs(query: str, k: int = 5, doc_ids: list[str] | None = None) -> dict:
     """Semantic search across uploaded Indonesian legal documents.
+    Pass `doc_ids` (list of document IDs) to pin retrieval to specific documents —
+    useful for cross-document comparison (e.g. a contract vs a statute).
     Returns `{answer, citations: [{document_id, chunk_index, snippet, legal_refs}]}`.
     """
-    return rag.search(query, k=k)
+    return rag.search(query, k=k, doc_ids=doc_ids)
 
 
 if __name__ == "__main__":

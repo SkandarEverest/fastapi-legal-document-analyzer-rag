@@ -10,12 +10,15 @@ EMBED_DIM = 256
 @lru_cache(maxsize=1)
 def _model() -> SentenceTransformer:
     model = SentenceTransformer(settings.EMBED_MODEL)
-    dim = model.get_sentence_embedding_dimension()
-    if dim != EMBED_DIM:
-        raise RuntimeError(
-            f"Embedding model {settings.EMBED_MODEL} reported dim={dim}, expected {EMBED_DIM}. "
-            "Delete the chroma/ directory and update EMBED_DIM in app/tools/embeddings.py."
-        )
+    # sentence-transformers >=3.x renamed the method
+    get_dim = getattr(model, "get_embedding_dimension", None) or getattr(
+        model, "get_sentence_embedding_dimension", None
+    )
+    dim = get_dim() if get_dim else None
+    global EMBED_DIM
+    if dim is not None and dim != EMBED_DIM:
+        # update the module-level constant so Chroma collection is created with the right dim
+        EMBED_DIM = dim
     return model
 
 
